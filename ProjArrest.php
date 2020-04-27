@@ -68,12 +68,12 @@ class ProjArrest extends \ExternalModules\AbstractExternalModule {
             $study_id_field = $this->getProjectSetting('study-name-field');
             $study_id_event = $this->getProjectSetting('study-name-event');
             if ($this->getValue($record, $study_id_field, $study_id_event) === "") {
-                // Let's create a study_id
 
                 // First, let's get the dagNum
                 $dagNum = $this->getDagGroupIdToDagNumPrefix($group_id);
                 if ($dagNum == false) {
                     $this->emLog("Unable to get a valid dagNum for $record / $group_id");
+                    REDCap::logEvent("Unable to get a valid dagNum for $record / $group_id");
                     return false;
                 }
 
