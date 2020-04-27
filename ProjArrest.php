@@ -78,7 +78,7 @@ class ProjArrest extends \ExternalModules\AbstractExternalModule {
                 }
 
                 // Next, let's get the ID:
-                $prefix        = "P" . $dagNum . "-";
+                $prefix        = "R" . $dagNum . "-";
                 $padding       = 3;
                 $next_study_id = $this->getNextStudyId($prefix, $padding, $study_id_field, $study_id_event);
 
