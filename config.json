@@ -1,7 +1,7 @@
 {
-	"name": "ClassNameHere",
+	"name": "ProjArrest",
 
-	"namespace": "Stanford\\ClassNameHere",
+	"namespace": "Stanford\\ProjArrest",
 
 	"description": "A template for a REDCap External Module",
 
@@ -16,12 +16,10 @@
 	],
 
 	"permissions": [
-		"redcap_module_system_enable",
-		"redcap_module_project_enable",
-		"redcap_module_save_configuration"
-	],
-	
-	"enable-every-page-hooks-on-system-pages": false,	
+        "redcap_save_record"
+    ],
+
+	"enable-every-page-hooks-on-system-pages": false,
 
 	"links": {
 		"project": [
@@ -37,6 +35,48 @@
 	],
 
 	"project-settings": [
+        {
+            "key": "random-result-field",
+            "name": "<b>Random Result Field</b><br>The field where the randomized value is stored.  Used to decide when to do something",
+            "required": true,
+            "type": "field-list"
+        },
+        {
+            "key": "random-result-event",
+            "name": "<b>Event where Random Result field is stored</b>",
+            "required": true,
+            "type": "event-list"
+        },
+        {
+            "key": "study-name-field",
+            "name": "<b>Study Name Field</b><br>Store the newly assigned secondary project id in this field",
+            "required": true,
+            "type": "field-list"
+        },
+        {
+            "key": "study-name-event",
+            "name": "<b>Event where Study Name Field is stored</b>",
+            "required": true,
+            "type": "event-list"
+        },
+        {
+            "key": "pharma-alias-field",
+            "name": "<b>Pharma Alias Field</b><br>Store the newly assigned pharma alias in this field",
+            "required": true,
+            "type": "field-list"
+        },
+        {
+            "key": "pharma-alias-event",
+            "name": "<b>Event where Pharma Alias is stored</b>",
+            "required": true,
+            "type": "event-list"
+        },
+        {
+            "key": "pharma-alias-pid",
+            "name": "<b>Project where Pharma Alias database is stored</b>",
+            "required": true,
+            "type": "project-id"
+        },
 		{
 			"key": "enable-project-debug-logging",
 			"name": "<b>Enable Debug Logging</b><br><i>(optional)</i> Requires installation and configuration of emLogger",
