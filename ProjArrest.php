@@ -80,7 +80,7 @@ class ProjArrest extends \ExternalModules\AbstractExternalModule {
                 // Next, let's get the ID:
                 $prefix        = "R" . $dagNum . "-";
                 $padding       = 3;
-                $next_study_id = $this->getNextStudyId($prefix, $padding, $study_id_field, $study_id_event);
+                $next_study_id = $this->getNextFormattedFieldId($prefix, $padding, $study_id_field, $study_id_event);
 
                 if ($next_study_id == false) {
                     $this->emLog("There was an error getting the nextStudyId for $record with $prefix");
@@ -269,39 +269,52 @@ class ProjArrest extends \ExternalModules\AbstractExternalModule {
 
 
     /**
-     * This function will create the next record label based on the inputs from the config file
-     * and the existing records.
+     * This function will create the next incremented field based on the inputs.
+     * It works both on record_ids AND on another field in the project
+     * It does not work on repeating forms/events
      *
-     * @param $record_prefix - user entered in config
-     * @param $number_padding_size - user entered number length in config
-     * @param $recordFieldName - field_name in project of record id
+     * @param $prefix - user entered in config
+     * @param $padding_length - user entered number length in config
+     * @param $field_name - field_name in project of record id
      * @return string - new record label
+     * @throws \Exception
      */
-    private function getNextStudyId($record_prefix, $number_padding_size, $recordFieldName, $event_id) {
-        $filter = "starts_with([" . $recordFieldName . "],'" .$record_prefix . "')";
-        $record_field_array = array($recordFieldName);
-        $recordIDs = REDCap::getData('array', null, $record_field_array, $event_id, null, null, null, null, $filter);
+    private function getNextFormattedFieldId($prefix, $padding_length, $field_name, $event_id = null, $project_id = null) {
+        global $Proj;
+
+        // Set the $proj variable
+        if (empty($project_id)) {
+            $proj = $Proj;
+        } else {
+            $proj = isset($Proj) && $Proj->project_id == $project_id ? $Proj : new \Project($project_id);
+        }
+        if (empty($proj)) return false;  // MISSING REQUIRE PROJ
+
+        // Set the event_id
+        if (empty($event_id)) $event_id = $proj->firstEventId;
+
+        // Make a filter
+        $filter = "starts_with([" . $field_name . "],'" .$prefix . "')";
+        $fields_array = array($field_name);
+        $records = REDCap::getData('array', null, $fields_array, $event_id, null, null, null, null, $filter);
 
         // Get the part of the record name after the prefix.  Changing to uppercase in case someone hand enters a record
         // and uses the same prefix with different case.
-        $record_array_noprefix = array();
-        foreach($recordIDs as $record_num => $recordInfo) {
-            $record_noprefix = trim(str_replace(strtoupper($record_prefix), "", strtoupper($record_num)));
-            if (is_numeric($record_noprefix)) {
-                $record_array_noprefix[] = $record_noprefix;
+        $numeric_values_prefix_removed = array();
+        foreach($records as $id => $events) {
+            // Skip if empty/missing
+            if (empty($events[$event_id][$field_name])) continue;
+            $current_value = $events[$event_id][$field_name];
+            $value_prefix_removed = empty($prefix) ? trim($current_value) : trim(str_replace($prefix, "", $current_value));
+            if (is_numeric($value_prefix_removed)) {
+                $numeric_values_prefix_removed[] = intval($value_prefix_removed);
             }
         }
 
         // Retrieve the max value so we can add one to create the new record label
-        $highest_record_number = max($record_array_noprefix);
-        if (!empty($number_padding_size)) {
-            $numeric_part = str_pad(($highest_record_number + 1), $number_padding_size, '0', STR_PAD_LEFT);
-        } else {
-            $numeric_part = ($highest_record_number + 1);
-        }
-        $newRecordLabel = $record_prefix . $numeric_part;
-
-        return $newRecordLabel;
+        $highest_id = count($numeric_values_prefix_removed) > 0 ? max($numeric_values_prefix_removed) : 0;
+        $next_id = empty($padding_length) ? $highest_id + 1 : str_pad(($highest_id + 1), $padding_length, '0', STR_PAD_LEFT);
+        return $prefix . $next_id;
     }
 
 }
