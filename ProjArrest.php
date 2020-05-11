@@ -31,23 +31,33 @@ class ProjArrest extends \ExternalModules\AbstractExternalModule {
      * @param $survey_hash
      * @param $response_id
      * @param $repeat_instance
+     * @throws \Exception
      */
 	public function redcap_save_record($project_id, $record, $instrument, $event_id, $group_id,
                                        $survey_hash, $response_id, $repeat_instance) {
+
+	    // Try and run after randomisation
+	    $this->delayModuleExecution();
+
         $this->emDebug("Save on $instrument in $event_id");
 
-        if ($this->inRandomEvent($record,$event_id)) {
+        try {
 
-            // See if we need to update the study id
-            $result = $this->checkStudyId($record, $group_id);
-            $this->emDebug($result);
+            if ($this->inRandomEvent($record, $event_id)) {
 
-            // See if we need to update the pharma alias
-            $result = $this->checkPharmaAlias($record, $group_id);
-            $this->emDebug($result);
+                // See if we need to update the study id
+                $result = $this->checkStudyId($record, $group_id);
+                $this->emDebug($result);
 
+                // See if we need to update the pharma alias
+                $result = $this->checkPharmaAlias($record, $group_id);
+                $this->emDebug($result);
+
+            }
+
+        } catch (\Exception $e) {
+            $this->emDebug("Exception: " . $e->getMessage(), $e->getTraceAsString());
         }
-
     }
 
 
@@ -58,6 +68,7 @@ class ProjArrest extends \ExternalModules\AbstractExternalModule {
      * @param $event_id
      * @param $group_id
      * @return bool|string
+     * @throws \Exception
      */
     public function checkStudyId($record, $group_id) {
 
@@ -131,6 +142,10 @@ class ProjArrest extends \ExternalModules\AbstractExternalModule {
         // Lookup the next alias
         $site = $this->getDagGroupIdToDagNumPrefix($group_id);
 
+        if (empty($site)) {
+            $this->emDebug("Unable to do pharma alias with no site");
+            return false;
+        }
         $params = array(
             "project_id"    => $pharma_alias_pid,
             "return_format" => 'json',
@@ -184,18 +199,6 @@ class ProjArrest extends \ExternalModules\AbstractExternalModule {
      */
 	public function getDagGroupIdToDagNumPrefix($group_id = null) {
 
-        // SU, Stanford University
-        // MCJ, Mayo Clinic - Jacksonville
-        // MCR, Mayo Clinic - Rochester
-        // MCS, Mayo Clinic - Scottsdale
-        // DU, Duke University
-        // JHU, Johns Hopkins University
-        // NYU, New York University - Langone Health
-        // TU, Temple University
-        // UA, University of Arizona
-        // UF, University of Florida
-        //
-        //
         // 01_stanford
         // 02_mayo_jacksonvil
         // 03_mayo_rochester
@@ -221,6 +224,7 @@ class ProjArrest extends \ExternalModules\AbstractExternalModule {
         } elseif (isset($dagIdToDagNum[$group_id])) {
             $result = $dagIdToDagNum[$group_id];
         } else {
+            // If we were unable to obtain a dag number, return false
             $result = false;
         }
 
