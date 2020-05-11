@@ -39,19 +39,18 @@ class ProjArrest extends \ExternalModules\AbstractExternalModule {
 	    // Try and run after randomisation
 	    $this->delayModuleExecution();
 
-        $this->emDebug("Save on $instrument in $event_id");
-
         try {
 
             if ($this->inRandomEvent($record, $event_id)) {
+                $this->emDebug("Save on $instrument in $event_id");
 
                 // See if we need to update the study id
                 $result = $this->checkStudyId($record, $group_id);
-                $this->emDebug($result);
+                // $this->emDebug($result);
 
                 // See if we need to update the pharma alias
                 $result = $this->checkPharmaAlias($record, $group_id);
-                $this->emDebug($result);
+                // $this->emDebug($result);
 
             }
 
